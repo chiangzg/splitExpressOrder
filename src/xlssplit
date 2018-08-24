@@ -1,0 +1,45 @@
+#!/usr/bin/python
+# -*- coding: UTF-8 -*-
+
+import openpyxl as xls
+import sys
+import os
+import time
+
+def main():
+    argv = sys.argv[1:]
+    if not argv:
+        raise Exception('参数无效')
+    filePath = argv[0]
+    if not os.access(filePath, os.F_OK):
+        raise Exception('xlsx不存在')
+
+    splitXls(path=filePath)
+
+def splitXls(path):
+    """拆分物流单"""
+    
+    wb = xls.load_workbook(path)
+    sheet = wb.active
+
+    # 新xls
+    nWb = xls.Workbook()
+    nWs = nWb.active
+    count = 0
+    for row in sheet.rows:
+        orderList = row[-1].value.split(',')
+        for i in range(len(orderList)):
+            count += 1
+            for cell in row:
+                key='%s%d' % (cell.column, count)
+                if cell.column == 'N':
+                    nWs[key] = orderList[i]
+                elif cell.column == 'K':
+                    nWs[key] = 1
+                else:
+                    nWs[key] = cell.value
+    nWb.save('./%d.xlsx' % int(time.time()))
+
+if __name__ == '__main__':
+    sys.exit(main())
+
